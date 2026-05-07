@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* Custom Scrollbar Styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 20px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

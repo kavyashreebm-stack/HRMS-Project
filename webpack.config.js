@@ -49,7 +49,7 @@ module.exports = {
       template: "./public/index.html",
     }),
     new webpack.DefinePlugin({
-      "process.env.REACT_APP_API_URL": JSON.stringify(process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"),
+      "process.env.REACT_APP_API_URL": JSON.stringify(process.env.REACT_APP_API_URL || "http://HR-Backend-Project-env.eba-yvheskpa.ap-southeast-2.elasticbeanstalk.com"),
     }),
   ],
 };

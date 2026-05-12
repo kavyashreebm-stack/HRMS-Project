@@ -351,6 +351,26 @@ def get_my_applications(
     ).order_by(models.Application.created_at.desc()).all()
 
 
+@router.delete("/application/{application_id}")
+def delete_application(
+    application_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Delete a job application"""
+    app = db.query(models.Application).filter(
+        models.Application.id == application_id,
+        models.Application.user_id == current_user.id
+    ).first()
+    
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    db.delete(app)
+    db.commit()
+    return {"message": "Application deleted successfully"}
+
+
 # =========================
 # 🔔 DASHBOARD DATA & NOTIFICATIONS
 # =========================

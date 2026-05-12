@@ -22,9 +22,9 @@ export default function HRAllApplications() {
     try {
       const response = await getHRApplications({ status: status || undefined, search: search || undefined });
       const mapped = response.data.map(app => ({
-          ...app,
-          job: app.department.charAt(0).toUpperCase() + app.department.slice(1).replace("_", " "),
-          date: app.created_at ? new Date(app.created_at).toLocaleDateString() : "N/A"
+        ...app,
+        job: app.department.charAt(0).toUpperCase() + app.department.slice(1).replace("_", " "),
+        date: app.created_at ? new Date(app.created_at).toLocaleDateString() : "N/A"
       }));
       setApplications(mapped);
     } catch (err) {
@@ -83,9 +83,9 @@ export default function HRAllApplications() {
           />
 
           {loading ? (
-             <div className="flex justify-center items-center h-64">
-                <p className="text-gray-500">Loading applications...</p>
-             </div>
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-500">Loading applications...</p>
+            </div>
           ) : view === "kanban" ? (
             <HRApplicationsKanban
               applications={filtered}

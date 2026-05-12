@@ -90,15 +90,13 @@ const DEFAULT_FORM_DATA = {
 
 // 🔹 Map Backend to Frontend
 const mapBackendToFrontend = (data) => {
-  // Convert DD-MM-YYYY (backend) to YYYY-MM-DD (frontend date picker)
   let formattedDob = "";
   if (data.date_of_birth && data.date_of_birth.includes("-")) {
     const parts = data.date_of_birth.split("-");
     if (parts[0].length === 2) {
-      // It's DD-MM-YYYY
       formattedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
     } else {
-      formattedDob = data.date_of_birth; // Already YYYY-MM-DD?
+      formattedDob = data.date_of_birth;
     }
   }
 
@@ -132,12 +130,10 @@ const mapBackendToFrontend = (data) => {
 
 // 🔹 Map Frontend to Backend
 const mapFrontendToBackend = (data) => {
-  // Convert YYYY-MM-DD (frontend) to DD-MM-YYYY (backend)
   let formattedDob = data.dob;
   if (data.dob && data.dob.includes("-")) {
     const parts = data.dob.split("-");
     if (parts[0].length === 4) {
-      // It's YYYY-MM-DD
       formattedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
   }
@@ -196,6 +192,7 @@ export default function CandidateProfile({
   const [isDirtyLocal, setIsDirtyLocal] = useState(false);
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreated, setIsCreated] = useState(false);
 
@@ -230,8 +227,7 @@ export default function CandidateProfile({
 
   const updateFormData = (updater) => {
     setFormData((prev) => {
-      const updated =
-        typeof updater === "function" ? updater(prev) : updater;
+      const updated = typeof updater === "function" ? updater(prev) : updater;
       return updated;
     });
     if (!readOnly) {
@@ -241,8 +237,9 @@ export default function CandidateProfile({
   };
 
   const handleSaveStep = async () => {
-    if (!user || !user.id) return;
+    if (!user || !user.id || isSaving) return;
     
+    setIsSaving(true);
     setAutoSaveStatus("Saving...");
     try {
       const payload = mapFrontendToBackend(formData);
@@ -264,14 +261,16 @@ export default function CandidateProfile({
         message: "Could not save your changes. Please check your connection.",
         type: "warning"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleCreateProfile = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       if (user && user.id) {
-        // ✅ Explicitly set is_profile_created to true only on final creation
         const payload = { ...mapFrontendToBackend(formData), is_profile_created: true };
         await updateCandidateProfile(user.id, payload);
         setIsCreated(true);
@@ -295,6 +294,7 @@ export default function CandidateProfile({
   };
 
   const handleInternalSave = async () => {
+    if (isSaving) return;
     await handleSaveStep();
     await onSave(formData);
     originalDataRef.current = formData;
@@ -304,7 +304,6 @@ export default function CandidateProfile({
 
   const handleInternalCancel = () => {
     if (isDirtyLocal && !window.confirm("Discard unsaved changes?")) return;
-
     setFormData(originalDataRef.current);
     setIsDirtyLocal(false);
     setIsDirty(false);
@@ -387,16 +386,18 @@ export default function CandidateProfile({
                     <>
                       <button
                         onClick={handleInternalCancel}
-                        className="px-4 py-1.5 text-white bg-[#0057B8] border rounded-full text-sm"
+                        disabled={isSaving}
+                        className="px-4 py-1.5 text-white bg-[#0057B8] border rounded-full text-sm disabled:opacity-50"
                       >
                         Cancel
                       </button>
 
                       <button
                         onClick={handleInternalSave}
-                        className="px-5 py-1.5 bg-[#0057B8] text-white rounded-full text-sm"
+                        disabled={isSaving}
+                        className="px-5 py-1.5 bg-[#0057B8] text-white rounded-full text-sm disabled:opacity-50"
                       >
-                        Save
+                        {isSaving ? "Saving..." : "Save"}
                       </button>
                     </>
                   )}
@@ -409,12 +410,10 @@ export default function CandidateProfile({
 
           {!isEditFlow && !readOnly && (
             <div className="mt-8 flex items-center justify-between max-w-5xl mx-auto pb-12">
-
               <button
                 onClick={() => currentSection > 0 && setCurrentSection(s => s - 1)}
-                disabled={currentSection === 0}
-                className={`px-6 py-2 rounded-full border ${currentSection === 0 ? "opacity-40 cursor-not-allowed" : ""
-                  }`}
+                disabled={currentSection === 0 || isSaving}
+                className={`px-6 py-2 rounded-full border ${currentSection === 0 || isSaving ? "opacity-40 cursor-not-allowed" : ""}`}
               >
                 Back
               </button>
@@ -432,10 +431,7 @@ export default function CandidateProfile({
                     <button
                       onClick={handleCreateProfile}
                       disabled={isSubmitting}
-                      className={`px-6 py-2 text-white rounded-full ${isSubmitting
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-red-600"
-                        }`}
+                      className={`px-6 py-2 text-white rounded-full ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-red-600"}`}
                     >
                       {isSubmitting ? "Creating..." : "Create Profile"}
                     </button>
@@ -447,9 +443,10 @@ export default function CandidateProfile({
                     await handleSaveStep();
                     setCurrentSection(s => s + 1);
                   }}
-                  className="px-6 py-2 bg-red-600 text-white rounded-full"
+                  disabled={isSaving}
+                  className={`px-6 py-2 text-white rounded-full ${isSaving ? "bg-gray-400 cursor-not-allowed" : "bg-red-600"}`}
                 >
-                  Save and Continue
+                  {isSaving ? "Saving..." : "Save and Continue"}
                 </button>
               )}
             </div>

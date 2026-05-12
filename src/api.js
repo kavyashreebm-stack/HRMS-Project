@@ -1,10 +1,11 @@
 import axios from "axios";
 
 // ─── Base API instance ───────────────────────────────────────────────────────
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = "/api";
 
 const API = axios.create({
     baseURL: API_BASE_URL,
+    timeout: 30000, // Increase timeout to 30 seconds for uploads
 });
 
 export const FILE_BASE_URL = `${API_BASE_URL}/uploads`;
@@ -30,15 +31,27 @@ export const loginUser = (data) => API.post("/auth/login", data);
 export const getCandidateProfile = (userId) =>
     API.get(`/candidate/profile/${userId}`);
 
-export const uploadFile = (file, folder) => {
+export const uploadFile = async (file, folder) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", folder);
-    return API.post("/candidate/upload", formData, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    });
+    
+    // Retry logic for unstable network uploads
+    try {
+        return await API.post("/candidate/upload", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    } catch (error) {
+        if (error.code === 'ERR_NETWORK') {
+            console.warn("Network error during upload, retrying once...");
+            return await API.post("/candidate/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+        }
+        throw error;
+    }
 };
 
 export const updateCandidateProfile = (userId, data) =>
@@ -53,6 +66,8 @@ export const getCandidateDashboard = () => API.get("/candidate/dashboard");
 export const markNotificationsAsRead = () => API.post("/candidate/notifications/read-all");
 
 export const getCandidateApplications = () => API.get("/candidate/applications");
+
+export const deleteApplication = (appId) => API.delete(`/candidate/application/${appId}`);
 
 // ─── HR Admin Endpoints ──────────────────────────────────────────────────────
 export const getAllCandidates = () => API.get("/hr/candidates");

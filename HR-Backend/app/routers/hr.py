@@ -53,6 +53,7 @@ def get_hr_jobs_overview(
 def list_all_applications(
     status: Optional[str] = None,
     search: Optional[str] = None,
+    limit: Optional[int] = None,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_hr_user)
 ):
@@ -68,7 +69,12 @@ def list_all_applications(
             (models.Application.department.ilike(f"%{search}%"))
         )
     
-    return query.order_by(models.Application.created_at.desc()).all()
+    query = query.order_by(models.Application.created_at.desc())
+    
+    if limit:
+        query = query.limit(limit)
+    
+    return query.all()
 
 
 # ✅ PUT /hr/applications/{app_id}/status — Update status (HR only)

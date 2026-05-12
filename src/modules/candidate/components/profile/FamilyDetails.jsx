@@ -79,7 +79,16 @@ export default function FamilyDetails({
             required
             value={member.dob || ""}
             disabled={readOnly}
-            onChange={(v) => updateFamily(index, "dob", v)}
+            onChange={(v) => {
+              if (v) {
+                const d = new Date(v);
+                if (d.getFullYear() > new Date().getFullYear()) {
+                  alert("Please enter a valid Date of Birth");
+                  return;
+                }
+              }
+              updateFamily(index, "dob", v);
+            }}
           />
 
           {/* ✅ Aadhaar with spacing format */}

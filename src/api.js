@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // ─── Base API instance ───────────────────────────────────────────────────────
-const API_BASE_URL = "/api";
+const API_BASE_URL = "https://qvg1co5l50.execute-api.ap-southeast-2.amazonaws.com";
 
 const API = axios.create({
     baseURL: API_BASE_URL,

@@ -33,11 +33,18 @@ export default function CandidateLogin() {
         id: res.data.user_id 
       }));
 
-      // 🔥 Conditional Redirect: If candidate's profile is not fully created, send to profile creation
-      if (res.data.role === "CANDIDATE" && !res.data.is_profile_created) {
-        navigate("/candidate/profile");
+      // ✅ Smart Redirect based on Role
+      if (res.data.role === "HR") {
+        navigate("/hr/dashboard");
+      } else if (res.data.role === "CANDIDATE") {
+        if (!res.data.is_profile_created) {
+          navigate("/candidate/profile");
+        } else {
+          navigate("/candidate/dashboard");
+        }
       } else {
-        navigate("/candidate/dashboard");
+        // Fallback for any other roles
+        navigate("/");
       }
 
     } catch (err) {

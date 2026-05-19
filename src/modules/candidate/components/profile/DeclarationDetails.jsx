@@ -24,6 +24,8 @@ export default function Declaration({
 
     if (file.size > 2 * 1024 * 1024) {
       alert("File must be under 2MB");
+      const input = document.getElementById(`${field}Upload`);
+      if (input) input.value = "";
       return;
     }
 
@@ -41,6 +43,8 @@ export default function Declaration({
     }));
 
     setIsDirty(true);
+    const input = document.getElementById(`${field}Upload`);
+    if (input) input.value = "";
   };
 
   const removeFile = (field) => {
@@ -52,6 +56,38 @@ export default function Declaration({
       },
     }));
     setIsDirty(true);
+    const input = document.getElementById(`${field}Upload`);
+    if (input) input.value = "";
+  };
+
+  const handleView = (fileData) => {
+    if (!fileData) return;
+    if (fileData.startsWith("http")) {
+      window.open(fileData, "_blank");
+      return;
+    }
+    try {
+      const arr = fileData.split(",");
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      console.error("Error rendering file", e);
+      const win = window.open();
+      if (win) {
+        win.document.write(
+          `<iframe src="${fileData}" width="100%" height="100%" style="border:0;"></iframe>`
+        );
+      }
+    }
   };
 
   /* ---------------- DECLARATION UPDATE ---------------- */
@@ -105,9 +141,7 @@ export default function Declaration({
 
                 <button
                   className="text-blue-600"
-                  onClick={() =>
-                    window.open(declaration.aadhaar.data, "_blank")
-                  }
+                  onClick={() => handleView(declaration.aadhaar.data)}
                 >
                   View
                 </button>
@@ -151,9 +185,7 @@ export default function Declaration({
 
                 <button
                   className="text-blue-600"
-                  onClick={() =>
-                    window.open(declaration.pan.data, "_blank")
-                  }
+                  onClick={() => handleView(declaration.pan.data)}
                 >
                   View
                 </button>
@@ -173,7 +205,7 @@ export default function Declaration({
           {/* SSLC */}
           <div>
             <label className="text-sm font-medium mb-1 block">
-              SSLC Marks Card
+              All Marks Sheets
             </label>
 
             <div className="border-2 border-dashed rounded-xl p-6 text-center text-gray-500">
@@ -197,9 +229,7 @@ export default function Declaration({
 
                 <button
                   className="text-blue-600"
-                  onClick={() =>
-                    window.open(declaration.sslc.data, "_blank")
-                  }
+                  onClick={() => handleView(declaration.sslc.data)}
                 >
                   View
                 </button>

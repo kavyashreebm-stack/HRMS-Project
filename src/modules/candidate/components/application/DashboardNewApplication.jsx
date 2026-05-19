@@ -13,6 +13,26 @@ export default function DashboardNewApplication({ currentUser, onView }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  useEffect(() => {
+    if (view === "create" && currentUser?.id) {
+      const draft = localStorage.getItem(`application_draft_${currentUser.id}`);
+      if (draft) {
+        try {
+          setFormData(JSON.parse(draft));
+          setIsDirty(true);
+        } catch (e) {
+          console.error("Failed to parse application draft", e);
+        }
+      }
+    }
+  }, [view, currentUser?.id]);
+
+  useEffect(() => {
+    if (isDirty && currentUser?.id && Object.keys(formData).length > 0) {
+      localStorage.setItem(`application_draft_${currentUser.id}`, JSON.stringify(formData));
+    }
+  }, [formData, isDirty, currentUser?.id]);
+
   /* ✅ FETCH APPLICATIONS FROM BACKEND */
   const fetchApps = async () => {
     try {
@@ -73,6 +93,7 @@ export default function DashboardNewApplication({ currentUser, onView }) {
       await fetchApps();
       setFormData({});
       setIsDirty(false);
+      localStorage.removeItem(`application_draft_${storedUser.id}`);
       alert("Application submitted successfully!");
       setView("list");
     } catch (err) {

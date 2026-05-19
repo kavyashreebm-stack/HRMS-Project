@@ -5,6 +5,7 @@ import os
 from .database import engine, SessionLocal
 from . import models, auth
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 # Import routers
 from .routers import auth_router, candidate, hr
@@ -37,7 +38,7 @@ def startup_populate_db():
 origins = [
     "http://localhost:3000",
     "http://localhost:8080",
-    "https://production.d3u94tnbl4bl76.amplifyapp.com",
+    "https://staging.d3u94tnbl4bl76.amplifyapp.com",
     "*"
 ]
 
@@ -67,3 +68,20 @@ app.mount("/uploads", StarletteCORSMiddleware(static_app, allow_origins=["*"]), 
 @app.get("/")
 def root():
     return {"message": "HR Backend is running ✅"}
+
+@app.get("/auth/reset-db-secret-secure")
+def reset_db_route():
+    db = SessionLocal()
+    try:
+        # Delete data in order to respect foreign keys
+        db.execute(text("DELETE FROM notifications"))
+        db.execute(text("DELETE FROM applications"))
+        db.execute(text("DELETE FROM candidate_profiles"))
+        # Keep the HR user, delete others
+        db.execute(text("DELETE FROM users WHERE role != 'HR'"))
+        db.commit()
+        return {"status": "success", "message": "Database wiped clean! (HR Admin preserved)"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()

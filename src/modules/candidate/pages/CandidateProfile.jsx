@@ -207,23 +207,44 @@ export default function CandidateProfile({
     }
 
     const fetchProfile = async () => {
+      let baseData = DEFAULT_FORM_DATA;
       try {
         const res = await getCandidateProfile(user.id);
         if (res.data) {
-          const mappedData = mapBackendToFrontend(res.data);
-          setFormData(mappedData);
-          originalDataRef.current = mappedData;
+          baseData = mapBackendToFrontend(res.data);
           setIsCreated(res.data.is_profile_created);
         }
       } catch (err) {
         console.warn("No existing profile found on backend.");
-      } finally {
-        setIsLoading(false);
       }
+      
+      // Merge local draft if available
+      const draftStr = localStorage.getItem(`candidate_draft_${user.id}`);
+      if (draftStr) {
+        try {
+          const draft = JSON.parse(draftStr);
+          baseData = { ...baseData, ...draft };
+          setIsDirtyLocal(true);
+          setIsDirty(true);
+        } catch (e) {
+          console.error("Failed to parse local draft", e);
+        }
+      }
+
+      setFormData(baseData);
+      originalDataRef.current = baseData;
+      setIsLoading(false);
     };
 
     fetchProfile();
   }, [user?.id]);
+
+  // 🔹 Auto-save draft to localStorage whenever form is dirty
+  useEffect(() => {
+    if (isDirtyLocal && user?.id) {
+      localStorage.setItem(`candidate_draft_${user.id}`, JSON.stringify(formData));
+    }
+  }, [formData, isDirtyLocal, user?.id]);
 
   const updateFormData = (updater) => {
     setFormData((prev) => {
@@ -253,6 +274,8 @@ export default function CandidateProfile({
       setTimeout(() => setAutoSaveStatus("Ready"), 2000);
       setIsDirtyLocal(false);
       setIsDirty(false);
+      // Clear draft on successful save
+      localStorage.removeItem(`candidate_draft_${user.id}`);
     } catch (err) {
       console.error("Save step failed:", err);
       setAutoSaveStatus("Error");
@@ -274,6 +297,8 @@ export default function CandidateProfile({
         const payload = { ...mapFrontendToBackend(formData), is_profile_created: true };
         await updateCandidateProfile(user.id, payload);
         setIsCreated(true);
+        // Clear draft
+        localStorage.removeItem(`candidate_draft_${user.id}`);
         addToast({
           title: "Profile Finalized!",
           message: "Your candidate profile is complete. Redirecting to dashboard...",
@@ -307,6 +332,9 @@ export default function CandidateProfile({
     setFormData(originalDataRef.current);
     setIsDirtyLocal(false);
     setIsDirty(false);
+    if (user?.id) {
+      localStorage.removeItem(`candidate_draft_${user.id}`);
+    }
     onCancel();
   };
 

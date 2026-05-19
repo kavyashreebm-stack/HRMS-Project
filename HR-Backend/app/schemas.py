@@ -219,6 +219,7 @@ class JobCreate(BaseModel):
     title: str
     department: str
     location: str
+    experience_range: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
 
@@ -228,6 +229,7 @@ class JobResponse(BaseModel):
     title: str
     department: str
     location: str
+    experience_range: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
 

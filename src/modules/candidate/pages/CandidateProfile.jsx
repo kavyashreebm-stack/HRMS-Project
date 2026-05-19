@@ -187,8 +187,15 @@ export default function CandidateProfile({
 }) {
   const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToasts();
-  const [currentSection, setCurrentSection] = useState(0);
+  const user = getLoggedInUser();
+  const [currentSection, setCurrentSection] = useState(() => parseInt(localStorage.getItem(`profile_section_${user?.id}`) || "0"));
   const [autoSaveStatus, setAutoSaveStatus] = useState("Ready");
+
+  useEffect(() => {
+    if (user?.id) {
+       localStorage.setItem(`profile_section_${user.id}`, currentSection.toString());
+    }
+  }, [currentSection, user?.id]);
   const [isDirtyLocal, setIsDirtyLocal] = useState(false);
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -197,7 +204,6 @@ export default function CandidateProfile({
   const [isCreated, setIsCreated] = useState(false);
 
   const originalDataRef = useRef(formData);
-  const user = getLoggedInUser();
 
   // 🔹 Fetch Data from Backend
   useEffect(() => {

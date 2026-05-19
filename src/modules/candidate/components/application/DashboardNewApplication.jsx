@@ -6,12 +6,22 @@ import { applyForJob, getCandidateApplications, deleteApplication } from "../../
 
 export default function DashboardNewApplication({ currentUser, onView }) {
   const [applications, setApplications] = useState([]);
-  const [view, setView] = useState("list"); // list | create
+  const getUserId = () => {
+    if (currentUser?.id) return currentUser.id;
+    try { return JSON.parse(localStorage.getItem("loggedInUser"))?.id; } catch(e) {}
+    return "guest";
+  };
+  const [view, setView] = useState(() => localStorage.getItem(`app_view_${getUserId()}`) || "list");
   const [formData, setFormData] = useState({});
   const [isDirty, setIsDirty] = useState(false);
   const [viewApp, setViewApp] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [loadingApps, setLoadingApps] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem(`app_view_${getUserId()}`, view);
+  }, [view]);
 
   useEffect(() => {
     if (view === "create" && currentUser?.id) {
@@ -35,11 +45,14 @@ export default function DashboardNewApplication({ currentUser, onView }) {
 
   /* ✅ FETCH APPLICATIONS FROM BACKEND */
   const fetchApps = async () => {
+    setLoadingApps(true);
     try {
       const response = await getCandidateApplications();
       setApplications(response.data || []);
     } catch (err) {
       console.error("Failed to fetch applications:", err);
+    } finally {
+      setLoadingApps(false);
     }
   };
 
@@ -140,7 +153,11 @@ export default function DashboardNewApplication({ currentUser, onView }) {
         </button>
       </div>
 
-      {applications.length === 0 ? (
+      {loadingApps ? (
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+      ) : applications.length === 0 ? (
         <div className="flex justify-center items-center h-full">
           <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
             <img

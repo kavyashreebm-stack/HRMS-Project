@@ -122,6 +122,7 @@ class Job(Base):
     title = Column(String, nullable=False)
     department = Column(String, nullable=False)
     location = Column(String, default="Remote")
+    experience_range = Column(String, nullable=True)
     description = Column(String, nullable=True)
     tags = Column(JSON, nullable=True)  # Store skills/keywords like ["React", "Python"]
     posted_at = Column(DateTime(timezone=True), server_default=func.now())

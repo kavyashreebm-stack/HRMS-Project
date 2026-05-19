@@ -449,25 +449,25 @@ def get_dashboard_data(
         from datetime import datetime
         sections_str = ", ".join(missing_sections)
             
-        analysis_note = {
-            "id": 9999, # High ID for virtual note
-            "title": "Profile Analysis",
-            "message": f"Please fill out the missing details: {sections_str} to complete your profile.",
-            "notification_type": "urgent",
-            "is_read": False,
-            "created_at": datetime.now()
-        }
+        analysis_note = models.Notification(
+            id=9999, # High ID for virtual note
+            title="Profile Analysis",
+            message=f"Please fill out the missing details: {sections_str} to complete your profile.",
+            notification_type="urgent",
+            is_read=False,
+            created_at=datetime.now()
+        )
         notifications.insert(0, analysis_note)
     elif profile_pct == 100:
         from datetime import datetime
-        success_note = {
-            "id": 10000,
-            "title": "Profile Complete",
-            "message": "Congratulations! Your profile is 100% complete and ready for process.",
-            "notification_type": "success",
-            "is_read": False,
-            "created_at": datetime.now()
-        }
+        success_note = models.Notification(
+            id=10000,
+            title="Profile Complete",
+            message="Congratulations! Your profile is 100% complete and ready for process.",
+            notification_type="success",
+            is_read=False,
+            created_at=datetime.now()
+        )
         notifications.insert(0, success_note)
 
     # Application %: Use the status_percentage of the most recent application

@@ -14,6 +14,7 @@ export default function JobManagement() {
     title: "",
     department: "",
     location: "Bangalore",
+    experience_range: "",
     description: "",
   });
 
@@ -49,7 +50,7 @@ export default function JobManagement() {
       setIsSubmitting(true);
       await postJob(newJob);
       setIsModalOpen(false);
-      setNewJob({ title: "", department: "", location: "Bangalore", description: "" });
+      setNewJob({ title: "", department: "", location: "Bangalore", experience_range: "", description: "" });
       fetchJobs();
     } catch (err) {
       console.error("Failed to post job:", err);
@@ -138,6 +139,12 @@ export default function JobManagement() {
                           <MapPin size={14} className="text-red-400" />
                           {job.location}
                         </div>
+                        {job.experience_range && (
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded-lg">
+                            <Briefcase size={14} className="text-orange-400" />
+                            {job.experience_range}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -211,6 +218,13 @@ export default function JobManagement() {
                 placeholder="e.g. Bangalore"
                 value={newJob.location}
                 onChange={(v) => setNewJob({ ...newJob, location: v })}
+              />
+
+              <Input
+                label="Experience Range"
+                placeholder="e.g. 0-2 years, 3-5 years"
+                value={newJob.experience_range}
+                onChange={(v) => setNewJob({ ...newJob, experience_range: v })}
               />
 
               <Textarea

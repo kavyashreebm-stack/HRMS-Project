@@ -9,8 +9,12 @@ import { Loader2 } from "lucide-react";
 
 
 export default function CandidateDashboard({ currentUser }) {
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("candidate_active_tab") || "home");
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem("candidate_active_tab", activeTab);
+  }, [activeTab]);
   const [dashboardData, setDashboardData] = useState(null);
   const [error, setError] = useState(null);
 

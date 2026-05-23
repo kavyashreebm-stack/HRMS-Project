@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Dict
+from pydantic import BaseModel, EmailStr, Field, validator
+from typing import Optional, List, Dict, Any
 import uuid
 from datetime import datetime
 
@@ -33,6 +33,38 @@ class Token(BaseModel):
     user_id: uuid.UUID
     role: str
     is_profile_created: bool
+
+
+# =========================
+# 🏢 DEPARTMENT SCHEMA
+# =========================
+
+class DepartmentResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+# =========================
+# 📂 DOCUMENT SCHEMA
+# =========================
+
+class DocumentResponse(BaseModel):
+    id: int
+    user_id: uuid.UUID
+    document_type: str
+    file_name: Optional[str] = None
+    file_path: str
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # =========================
@@ -107,7 +139,7 @@ class EmergencyContact(BaseModel):
 
 class CandidateProfileBase(BaseModel):
     is_profile_created: bool = False
-    
+
     # 1️⃣ Personal Details (matching Frontend mapFrontendToBackend)
     name: Optional[str] = None
     designation: Optional[str] = None
@@ -140,7 +172,8 @@ class CandidateProfileBase(BaseModel):
     medical: Optional[MedicalDetails] = None
     declaration: Optional[DeclarationDetails] = None
 
-    # 💾 Document Paths
+    # 💾 Document Paths (legacy fields — kept for frontend compatibility)
+    # These are populated dynamically from the documents table in GET responses
     photo_path: Optional[str] = None
     resume_path: Optional[str] = None
     aadhar_doc_path: Optional[str] = None
@@ -166,18 +199,28 @@ class CandidateProfileResponse(CandidateProfileBase):
 
 
 # =========================
-# 📄 APPLICATION (Section 3)
+# 📄 APPLICATION
 # =========================
 
 class ApplicationCreate(BaseModel):
+    """Used when a candidate submits a job application.
+    Frontend sends `department` string (legacy) – backend resolves job_id internally.
+    """
     department: str
     experience_type: str
     other_details: Optional[Dict] = None
 
 
-class ApplicationResponse(ApplicationCreate):
+class ApplicationResponse(BaseModel):
+    """Response model for applications.
+    We expose `department` as a computed string (from job→department) for frontend compatibility.
+    """
     id: int
     user_id: uuid.UUID
+    job_id: int
+    department: Optional[str] = None        # Computed: job.department_rel.name
+    experience_type: Optional[str] = None
+    other_details: Optional[Dict] = None
     status: str
     status_percentage: int
     created_at: datetime
@@ -217,21 +260,23 @@ class ProgressInfo(BaseModel):
 
 class JobCreate(BaseModel):
     title: str
-    department: str
+    department: str          # HR sends department name string
     location: str
     experience_range: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
+    status: Optional[str] = "OPEN"
 
 
 class JobResponse(BaseModel):
     id: int
     title: str
-    department: str
+    department: Optional[str] = None       # Computed: department_rel.name
     location: str
     experience_range: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
+    status: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -243,6 +288,7 @@ class DashboardResponse(BaseModel):
     similar_jobs: List[JobResponse]
     progress: ProgressInfo
 
+
 # HR Schemas
 class HRDashboardStats(BaseModel):
     total_applications: int
@@ -250,9 +296,12 @@ class HRDashboardStats(BaseModel):
     pending_review: int
     onboarded: int
 
+
 class HRJobOverview(BaseModel):
     department: str
     applicant_count: int
 
+
 class ApplicationStatusUpdate(BaseModel):
     status: str
+    remarks: Optional[str] = None

@@ -25,18 +25,21 @@ export default function CandidateLogin() {
         password,
       });
 
+      if (res.data.role !== "CANDIDATE") {
+        setError("This account is not authorized for Candidate access.");
+        return;
+      }
+
       // ✅ Store essential auth data
       localStorage.setItem("token", res.data.access_token);
-      localStorage.setItem("loggedInUser", JSON.stringify({ 
-        email, 
-        role: res.data.role, 
-        id: res.data.user_id 
+      localStorage.setItem("loggedInUser", JSON.stringify({
+        email,
+        role: res.data.role,
+        id: res.data.user_id
       }));
 
       // ✅ Smart Redirect based on Role
-      if (res.data.role === "HR") {
-        navigate("/hr/dashboard");
-      } else if (res.data.role === "CANDIDATE") {
+      if (res.data.role === "CANDIDATE") {
         if (!res.data.is_profile_created) {
           navigate("/candidate/profile");
         } else {

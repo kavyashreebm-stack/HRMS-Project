@@ -2,9 +2,12 @@
   "name": "hrapp",
   "version": "1.0.0",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "webpack serve --mode development",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production && node -e \"const fs = require('fs'); fs.rmSync('build', { recursive: true, force: true }); fs.cpSync('dist', 'build', { recursive: true });\""
   },
   "keywords": [],
   "author": "",
